@@ -6,6 +6,7 @@ from mysql.connector.errors import ProgrammingError as mysql_ProgrammingError
 
 # A class to handle MySQL interactions with the StockBot database.
 class StockDB:
+    
     # Hardcoded inserts for stock and stock_history tables.
     inserts = {'ins_stock' : ("INSERT INTO stock (stock_id, avg_open, avg_daily, avg_close) "
                               "VALUES (%s, %s, %s, %s)"),
@@ -14,8 +15,16 @@ class StockDB:
     # Hardcoded select statements to grab keys from the tables.
     keys = {'key_stock' : ("SELECT stock_id FROM stock"),
             'key_stock_history' : ("SELECT stock_id, stock_history_timestamp FROM stock_history")}
+
+    # Hardcoded update statements to change values in the StockBot.stock table.
+    updates = {'upd_stock_open' : ("UPDATE stock SET avg_open = {} WHERE stock_id = '{}'"),
+               'upd_stock_daily' : ("UPDATE stock SET avg_daily = {} WHERE stock_id = '{}'"),
+               'upd_stock_close' : ("UPDATE stock SET avg_daily = {} WHERE stock_id = '{}'")}
     
-    # TODO: Make a dictionary of common queries based on information in the database for updating purposes.
+    # Hardcoded select statements to get the averages of values from the stock_history table.
+    averages = {'avg_stock_daily' : ("SELECT AVG(stock_history_price) AS avg_daily FROM stock_history WHERE stock_id = '{}'"),
+                'avg_stock_open' : (""),
+                'avg_stock_close' : ("")}
     
     # Attempt to initialize a connection with the given parameters.
     def __init__(self, user, password, hostIP, database):
@@ -108,3 +117,33 @@ class StockDB:
         dictCurs.close()
         return result
     
+    # Averages the history of the stock.
+    def avgHistory(self, stock_id, attribute):
+        dictCurs = self.cnx.cursor(dictionary=True)
+        query = StockDB.averages['avg_stock_' + attribute].format(stock_id)
+        
+        try:
+            dictCurs.execute(query)
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in avgHistory. Unable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in avgHistory:", sys.exc_info()[0])
+            
+        average = []
+        for row in dictCurs:
+            average.append(row['avg_' + attribute])
+        
+        dictCurs.close()
+        return average
+            
+    def updateStockAttribute(self, stock_id, attribute, value): 
+        query = StockDB.updates['upd_stock_' + attribute].format(value, stock_id)
+        
+        try:
+            self.cursor.execute(query)
+            self.cnx.commit()
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in updateStockAttribute. Unable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in updateStockAttribute:", sys.exc_info()[0])   
+            

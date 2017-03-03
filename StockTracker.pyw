@@ -3,6 +3,13 @@ from StockBot import StockBot
 from datetime import datetime
 import sched, time
 
+# TODO:
+# -Update exception handling to create log files if necessary.
+# -Allow adding/removing stocks from the DB without directly altering the DB.
+# -Implement data processing to update the stock table with avgs.
+# -Update table schema in stock and stock_history, perhaps create another?
+# -Add iteration through columns in StockBot.stock for updating data
+
 # Return true if it is currently trading hours, and false otherwise.
 # Based off of my timezone (US Central).
 # TODO: update to allow alternate timezones to compare currentTime
@@ -12,21 +19,30 @@ def isDuringTrading(currentTime):
     else:
         return False
 
-# Activates sb.monitor every 5 minutes to update stock_history information with a new price.
+# Activates sb.monitor every 10 minutes to update stock_history information with a new price.
 def monitorStocks(sb: StockBot, monitorScheduler: sched.scheduler):
-    monitorScheduler.enter(300, 1, sb.monitor, ())
+    monitorScheduler.enter(600, 1, sb.monitor, ())
     monitorScheduler.run()
 
+def updateStocks(sb: StockBot, updateScheduler: sched.scheduler):
+    updateScheduler.enter(2, 1, sb.updateAverages, ())
+    updateScheduler.run()
+    
 # Main body of the program.
 def main():
     sd = StockDB('ben', 'pass', '127.0.0.1', 'stockbot')
     sb = StockBot(sd)
     monitorScheduler = sched.scheduler(time.time, time.sleep)
+    updateScheduler = sched.scheduler(time.time, time.sleep)
 
     while(True):
         currentTime = datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S')[11:]
-        if isDuringTrading(currentTime):
+        currentDay = datetime.today().weekday()
+        
+        # If it's not the weekend and during trading hours, monitor the stocks.
+        if (currentDay < 5) and (isDuringTrading(currentTime)):
             monitorStocks(sb, monitorScheduler)
+            updateStocks(sb, updateScheduler)
 
     sd.close()
 
