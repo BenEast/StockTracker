@@ -4,15 +4,16 @@ from mysql.connector.errors import IntegrityError as mysql_IntegrityError
 from mysql.connector.errors import DataError as mysql_DataError
 from mysql.connector.errors import ProgrammingError as mysql_ProgrammingError
 
+
 class StockDB:
     # Hardcoded inserts for stock and stock_history tables.
     inserts = {'ins_stock' : ("INSERT INTO stock (stock_id, avg_open, avg_daily, avg_close) "
                               "VALUES (%s, %s, %s, %s)"),
-                'ins_stock_history' : ("INSERT INTO stock_history (stock_id, stock_day_open, stock_day_value, stock_day_close, stock_history_timestamp) "
-                "VALUES (%s, %s, %s, %s, %s)")}
+                'ins_stock_history' : ("INSERT INTO stock_history (stock_id, stock_history_timestamp, stock_history_price) "
+                "VALUES (%s, %s, %s)")}
     # Hardcoded select statements to grab keys from the tables.
     keys = {'key_stock' : ("SELECT stock_id FROM stock"),
-            'key_stock_history' : ("SELECT stock_id, timestamp FROM stock_history")}
+            'key_stock_history' : ("SELECT stock_id, stock_history_timestamp FROM stock_history")}
     
     # Attempt to initialize a connection with the given parameters.
     def __init__(self, user, password, hostIP, database):
@@ -48,14 +49,14 @@ class StockDB:
         except TypeError:
             print("Incorrect number of arguments for stock query.")
         except:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error in addStock:", sys.exc_info()[0])
             
     # Adds a stock history entry with the given parameters to the StockBot.stock_history table
     # in the MySQL database.
-    def addStockHistory(self, stockID, dayOpen, dayAvg, dayClose, timestamp):
+    def addStockHistory(self, stockID, timestamp, price):
         try:
             self.cursor.execute(StockDB.inserts['ins_stock_history'], 
-                                   (stockID, dayOpen, dayAvg, dayClose, timestamp))
+                                   (stockID, timestamp, price))
             self.cnx.commit()
             
         except mysql_IntegrityError:
@@ -65,7 +66,7 @@ class StockDB:
         except TypeError:
             print("Incorrect number of arguments for stock_history query.")
         except:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error in addStockHistory:", sys.exc_info()[0])
     
     # Attempts to execute the database query parameters and outputs the results to the console.
     def queryDB(self, dbQuery):
@@ -75,7 +76,7 @@ class StockDB:
             print("Invalid MySQL syntax! Unable to execute query '{}'".format(dbQuery))
             result = []
         except:
-            print("Unexpected error:", sys.exc_info()[0])
+            print("Unexpected error in queryDB:", sys.exc_info()[0])
             result = []
             
         if result:
@@ -88,14 +89,20 @@ class StockDB:
     
     # Gets the keys of the tuples in the given table and returns them.
     def getKeys(self, table):
-        keyName = 'key_' + table.lower()
-        query = StockDB.keys[keyName]
-        qOut = self.cursor.execute(query, multi=True)
+        dictCurs = self.cnx.cursor(dictionary=True)
+        query = StockDB.keys['key_' + table]
+        
+        try:
+            dictCurs.execute(query)
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in getKeys. Unable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in getKeys:", sys.exc_info()[0])
+        
         result = []
-        if qOut:
-            for r in qOut:
-                if r.with_rows:
-                    result.append(r.fetchall())
-
+        for row in dictCurs:
+            result.append(row['stock_id'])
+        
+        dictCurs.close()
         return result
     
