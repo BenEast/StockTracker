@@ -1,10 +1,10 @@
 import sys
-from time import time, gmtime, strftime
+from time import time
 from yahoo_finance import Share, YQLQueryError
 from StockDB import StockDB
 from datetime import datetime
 
-
+# A "bot" to check for updates for stocks in the StockBot database and insert new information.
 class StockBot:
     
     def __init__(self, stockDatabase: StockDB):
@@ -15,6 +15,7 @@ class StockBot:
         except:
             print("Unexpected error in StockBot init:", sys.exc_info()[0])
     
+    # Attempt to get current price information for the stocks in the database.
     def monitor(self):
         for stock in self.stocksToMonitor:
             yahoo = Share(stock)
@@ -26,14 +27,18 @@ class StockBot:
             except:
                 print("Unexpected error in monitor:", sys.exc_info()[0])
             
+    # Import the stock_id keys from the StockBot.stock table.
     def importStocksToMonitor(self):
         keys = self.sd.getKeys('stock')
         for key in keys:
             self.stocksToMonitor.append(key)
     
+    # Add a new entry to the StockBot.stock table.
     def postStock(self, stockID, avgOpen, avgDaily, avgClose):
         self.sd.addStock(stockID, avgOpen, avgDaily, avgClose)
         
+    # Add a new entry to the StockBot.stock_history table.
     def postStockHistory(self, stockID, price):
         timestamp = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S')
         self.sd.addStockHistory(stockID, timestamp, price)
+

@@ -4,7 +4,7 @@ from mysql.connector.errors import IntegrityError as mysql_IntegrityError
 from mysql.connector.errors import DataError as mysql_DataError
 from mysql.connector.errors import ProgrammingError as mysql_ProgrammingError
 
-
+# A class to handle MySQL interactions with the StockBot database.
 class StockDB:
     # Hardcoded inserts for stock and stock_history tables.
     inserts = {'ins_stock' : ("INSERT INTO stock (stock_id, avg_open, avg_daily, avg_close) "
@@ -14,6 +14,8 @@ class StockDB:
     # Hardcoded select statements to grab keys from the tables.
     keys = {'key_stock' : ("SELECT stock_id FROM stock"),
             'key_stock_history' : ("SELECT stock_id, stock_history_timestamp FROM stock_history")}
+    
+    # TODO: Make a dictionary of common queries based on information in the database for updating purposes.
     
     # Attempt to initialize a connection with the given parameters.
     def __init__(self, user, password, hostIP, database):
