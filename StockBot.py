@@ -19,7 +19,7 @@ class StockBot:
     def monitor(self):
         for stock in self.stocksToMonitor:
             yahoo = Share(stock)
-            
+           
             try:
                 self.postStockHistory(stock, yahoo.get_price())
             except YQLQueryError:
@@ -33,11 +33,14 @@ class StockBot:
         for key in keys:
             self.stocksToMonitor.append(key)
     
+    # Update the averages for every stock in the database
     def updateAverages(self):
         for stock_id in self.stocksToMonitor:
-            average = self.sd.avgHistory(stock_id, 'daily')[0]
-            self.sd.updateStockAttribute(stock_id, 'daily', average)
-        
+            attributes = self.sd.getAttributeNames(stock_id)
+            for attr in attributes:
+                average = self.sd.avgHistory(stock_id, attr)[0]
+                self.sd.updateStockAttribute(stock_id, attr, average)
+    
     # Add a new entry to the StockBot.stock table.
     def postStock(self, stockID, avgOpen, avgDaily, avgClose):
         self.sd.addStock(stockID, avgOpen, avgDaily, avgClose)
