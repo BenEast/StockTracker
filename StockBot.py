@@ -15,30 +15,35 @@ class StockBot:
         except:
             print("Unexpected error in StockBot init:", sys.exc_info()[0])
     
+    # Actively monitors and updates stock information.
+    def run(self):
+        self.monitor()
+        self.updateAverages()
+    
+    # Import the stock_id keys from the StockBot.stock table.
+    def importStocksToMonitor(self):
+        keys = self.sd.getKeyValues('stock')
+        for key in keys:
+            self.stocksToMonitor.append(key)
+            
     # Attempt to get current price information for the stocks in the database.
     def monitor(self):
-        for stock in self.stocksToMonitor:
-            yahoo = Share(stock)
+        for stock_id in self.stocksToMonitor:
+            yahoo = Share(stock_id)
            
             try:
-                self.postStockHistory(stock, yahoo.get_price())
+                self.postStockActivity(stock_id, yahoo.get_price())
             except YQLQueryError:
                 print("Yahoo finance is currently unavailable.")
             except:
                 print("Unexpected error in monitor:", sys.exc_info()[0])
-            
-    # Import the stock_id keys from the StockBot.stock table.
-    def importStocksToMonitor(self):
-        keys = self.sd.getKeys('stock')
-        for key in keys:
-            self.stocksToMonitor.append(key)
     
     # Update the averages for every stock in the database
     def updateAverages(self):
+        attributes = self.sd.getAttributeNamesNotKeys('stock')
         for stock_id in self.stocksToMonitor:
-            attributes = self.sd.getAttributeNames(stock_id)
             for attr in attributes:
-                average = self.sd.avgHistory(stock_id, attr)[0]
+                average = self.sd.avgActivity(stock_id, attr)
                 self.sd.updateStockAttribute(stock_id, attr, average)
     
     # Add a new entry to the StockBot.stock table.
@@ -46,7 +51,8 @@ class StockBot:
         self.sd.addStock(stockID, avgOpen, avgDaily, avgClose)
         
     # Add a new entry to the StockBot.stock_history table.
-    def postStockHistory(self, stockID, price):
+    def postStockActivity(self, stockID, price):
         timestamp = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S')
-        self.sd.addStockHistory(stockID, timestamp, price)
-
+        date = timestamp[:10]
+        time = timestamp[11:]
+        self.sd.addStockActivity(stockID, date, time, price)

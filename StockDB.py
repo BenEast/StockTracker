@@ -12,7 +12,7 @@ class StockDB:
     def __init__(self, user, password, hostIP, database):
         try:
             self.cnx = mysql.connector.connect(user=user, password=password,
-                                      host=hostIP, database=database)
+                                               host=hostIP, database=database)
             self.cursor = self.cnx.cursor(dictionary=True)
         # Throw errors if the connection cannot be initialized.
         except mysql_ProgrammingError:
@@ -32,7 +32,7 @@ class StockDB:
     # Adds a stock with the given parameters to the StockBot.stock table in the MySQL database.
     def addStock(self, stockID, avgOpen, avgDaily, avgClose):
         try:
-            self.cursor.execute(StockQueries.ins_stock, (stockID, avgOpen, avgDaily, avgClose))
+            self.cursor.execute(StockQueries.insStock, (stockID, avgOpen, avgDaily, avgClose))
             self.cnx.commit()
             
         except mysql_IntegrityError:
@@ -46,27 +46,26 @@ class StockDB:
             
     # Adds a stock history entry with the given parameters to the StockBot.stock_history table
     # in the MySQL database.
-    def addStockHistory(self, stockID, timestamp, price):
+    def addStockActivity(self, stockID, date, time, price):
         try:
-            self.cursor.execute(StockQueries.ins_stock_history, 
-                                   (stockID, timestamp, price))
+            self.cursor.execute(StockQueries.insStockActivity, (stockID, date, time, price))
             self.cnx.commit()
             
         except mysql_IntegrityError:
-            print("Key ({}, {}) already exists in table stock_history!".format(stockID, timestamp))
+            print("Key ({}, {}, {}) already exists in table stock_activity!".format(stockID, date, time))
         except mysql_DataError:
-            print("Invalid inputs for stock_history MySQL query.")
+            print("Invalid inputs for stock_activity MySQL query.")
         except TypeError:
-            print("Incorrect number of arguments for stock_history query.")
+            print("Incorrect number of arguments for stock_activity query.")
         except:
-            print("Unexpected error in addStockHistory:", sys.exc_info()[0])
+            print("Unexpected error in addStockActivity:", sys.exc_info()[0])
     
     # Attempts to execute the database query parameters and outputs the results to the console.
-    def queryDB(self, dbQuery):
+    def queryDB(self, query):
         try:
-            result = self.cursor.execute(dbQuery, multi=True)
+            result = self.cursor.execute(query, multi=True)
         except mysql_ProgrammingError:
-            print("Invalid MySQL syntax! Unable to execute query '{}'".format(dbQuery))
+            print("Invalid MySQL syntax! \nUnable to execute query '{}'".format(query))
             result = []
         except:
             print("Unexpected error in queryDB:", sys.exc_info()[0])
@@ -80,22 +79,37 @@ class StockDB:
                 else:
                     print("Number of rows affected by statement '{}': {}".format(r.statement, r.rowcount))
     
-    # Gets the keys of the tuples in the given table and returns them.
-    def getKeys(self, table):
-        if table == 'stock':
-            query = StockQueries.key_stock
-        elif table == 'stock_history':
-            query = StockQueries.key_stock_history
-        else:
-            print("Invalid table passed to getKeys.")
-            return
+    # Gets the attributes that are keys in the given table.
+    def getKeyAttributes(self, table):
+        table = table.lower()
+        
+        query = StockQueries.getQueryKeyAttributes(table)
         
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in getKeys. Unable to execute query '{}'".format(query))
+            print("Invalid MySQL query in getKeyAttributes. \nUnable to execute query '{}'".format(query))
         except:
-            print("Unexpected error in getKeys:", sys.exc_info()[0])
+            print("Unexpected error in getKeyValues:", sys.exc_info()[0]) 
+            
+        keys = []
+        for row in self.cursor:
+            keys.append(row['primary_key'])
+            
+        return keys
+    
+    # Gets the keys of the tuples in the given table and returns them.
+    def getKeyValues(self, table):
+        table = table.lower()
+
+        query = StockQueries.getTableKeyValues(table)
+        
+        try:
+            self.cursor.execute(query)
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in getKeyValues. \nUnable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in getKeyValues:", sys.exc_info()[0])
         
         result = []
         for row in self.cursor:
@@ -104,63 +118,81 @@ class StockDB:
         return result
     
     # Averages the history of the stock.
-    def avgHistory(self, stock_id, attribute):
-        if attribute == 'daily':
-            query = StockQueries.avg_stock_daily.format(stock_id)
-        elif attribute == 'open':
-            query = StockQueries.avg_stock_open.format(stock_id)
-        elif attribute == 'close':
-            query = StockQueries.avg_stock_close.format(stock_id)
-        else:
-            print("Invalid attribute passed to avgHistory.")
-            return
+    def avgActivity(self, stock_id, attribute):
+        attribute = attribute.lower()
+        
+        query = StockQueries.getAvgStockQuery(attribute, stock_id)
         
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in avgHistory. Unable to execute query '{}'".format(query))
+            print("Invalid MySQL query in avgActivity. \nUnable to execute query '{}'".format(query))
         except:
-            print("Unexpected error in avgHistory:", sys.exc_info()[0])
+            print("Unexpected error in avgActivity:", sys.exc_info()[0])
             
-        average = []
         for row in self.cursor:
-            average.append(row['avg_' + attribute])
-        
-        return average
+            return (row[attribute])
             
     # Gets the attribute names of a given table in the database.
     def getAttributeNames(self, table):
+        table = table.lower()
+        
         query = StockQueries.attributeNames.format(table)
         
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in getAttributeNames. Unable to execute query '{}'".format(query))
+            print("Invalid MySQL query in getAttributeNames. \nUnable to execute query '{}'".format(query))
         except:
             print("Unexpected error in getAttributeNames:", sys.exc_info()[0])
             
         attributes = []
         for row in self.cursor:
-            attributes.append(row)
+            attributes.append(row['COLUMN_NAME'])
+        return attributes
+    
+    # Gets the names of the attributes that aren't keys for the given table.
+    def getAttributeNamesNotKeys(self, table):
+        table = table.lower()
+        
+        attributes = self.getAttributeNames(table)
+        keys = self.getKeyAttributes(table)
+        
+        for key in keys:
+            if key in attributes:
+                attributes.remove(key)
+    
         return attributes
     
     # Updates a given attribute of a given stock with the given value.
     def updateStockAttribute(self, stock_id, attribute, value): 
-        if attribute == 'daily':
-            query = StockQueries.upd_stock_daily.format(value, stock_id)
-        elif attribute == 'open':
-            query = StockQueries.upd_stock_open.format(value, stock_id)
-        elif attribute == 'close':
-            query = StockQueries.upd_stock_close.format(value, stock_id)
-        else:
-            print("Invalid attribute input to updateStockAttribute.")
-            return
+        attribute = attribute.lower()
+        
+        # In case a statement is unable to execute
+        if value == None:
+            value = -1
+        
+        query = StockQueries.getStockUpdateQuery(attribute, value, stock_id)
         
         try:
             self.cursor.execute(query)
             self.cnx.commit()
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in updateStockAttribute. Unable to execute query '{}'".format(query))
+            print("Invalid MySQL query in updateStockAttribute. \nUnable to execute query '{}'".format(query))
         except:
             print("Unexpected error in updateStockAttribute:", sys.exc_info()[0])   
-            
+    
+    # Updates a given attribute of a given stock with the given value.
+    def updateStockHistoryAttribute(self, stock_id, attribute, value): 
+        attribute = attribute.lower()
+        
+        query = StockQueries.getStockHistoryUpdateQuery(attribute, value, stock_id)
+        
+        try:
+            self.cursor.execute(query)
+            self.cnx.commit()
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in updateStockAttribute. \nUnable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in updateStockAttribute:", sys.exc_info()[0])   
+    
