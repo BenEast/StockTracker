@@ -1,5 +1,5 @@
 import mysql.connector
-import sys
+import sys, logging
 from StockQueries import *
 from mysql.connector.errors import IntegrityError as mysql_IntegrityError
 from mysql.connector.errors import DataError as mysql_DataError
@@ -14,7 +14,6 @@ class StockDB:
             self.cnx = mysql.connector.connect(user=user, password=password,
                                                host=hostIP, database=database)
             self.cursor = self.cnx.cursor(dictionary=True)
-        # Throw errors if the connection cannot be initialized.
         except mysql_ProgrammingError:
             print("Unable to initialize StockDB connection due to invalid inputs.")
         except:
@@ -34,7 +33,6 @@ class StockDB:
         try:
             self.cursor.execute(StockQueries.insStock, (stockID, avgOpen, avgDaily, avgClose))
             self.cnx.commit()
-            
         except mysql_IntegrityError:
             print("Key {} already exists in table stock!".format(stockID))
         except mysql_DataError:
@@ -44,13 +42,11 @@ class StockDB:
         except:
             print("Unexpected error in addStock:", sys.exc_info()[0])
             
-    # Adds a stock history entry with the given parameters to the StockBot.stock_history table
-    # in the MySQL database.
+    # Adds a stock activity entry with the given parameters to the StockBot.stock_activity table.
     def addStockActivity(self, stockID, date, time, price):
         try:
             self.cursor.execute(StockQueries.insStockActivity, (stockID, date, time, price))
-            self.cnx.commit()
-            
+            self.cnx.commit()     
         except mysql_IntegrityError:
             print("Key ({}, {}, {}) already exists in table stock_activity!".format(stockID, date, time))
         except mysql_DataError:
@@ -59,6 +55,21 @@ class StockDB:
             print("Incorrect number of arguments for stock_activity query.")
         except:
             print("Unexpected error in addStockActivity:", sys.exc_info()[0])
+            
+    # Adds a stock history entry with the given parameters to the StockBot.stock_history table.
+    def addStockHistory(self, stockID, currentDate, stockOpen, stockAvg, stockClose):
+        try:
+            self.cursor.execute(StockQueries.insStockHistory, 
+                                (stockID, currentDate, stockOpen, stockAvg, stockClose))
+            self.cnx.commit()
+        except mysql_IntegrityError:
+            print("Key ({}, {}, {}) already exists in table stock_activity!".format(stockID, currentDate))
+        except mysql_DataError:
+            print("Invalid inputs for stock_history MySQL query.")
+        except TypeError:
+            print("Incorrect number of arguments for stock_activity query.")
+        except:
+            print("Unexpected error in addStockHistory:", sys.exc_info()[0])
     
     # Attempts to execute the database query parameters and outputs the results to the console.
     def queryDB(self, query):
@@ -79,11 +90,12 @@ class StockDB:
                 else:
                     print("Number of rows affected by statement '{}': {}".format(r.statement, r.rowcount))
     
+        return result
+    
     # Gets the attributes that are keys in the given table.
     def getKeyAttributes(self, table):
-        table = table.lower()
-        
-        query = StockQueries.getQueryKeyAttributes(table)
+        table = table.lower()   
+        query = StockQueries.getQueryKeyAttributes(table)       
         
         try:
             self.cursor.execute(query)
@@ -120,7 +132,6 @@ class StockDB:
     # Averages the history of the stock.
     def avgActivity(self, stock_id, attribute):
         attribute = attribute.lower()
-        
         query = StockQueries.getAvgStockQuery(attribute, stock_id)
         
         try:
@@ -136,7 +147,6 @@ class StockDB:
     # Gets the attribute names of a given table in the database.
     def getAttributeNames(self, table):
         table = table.lower()
-        
         query = StockQueries.attributeNames.format(table)
         
         try:
@@ -154,7 +164,6 @@ class StockDB:
     # Gets the names of the attributes that aren't keys for the given table.
     def getAttributeNamesNotKeys(self, table):
         table = table.lower()
-        
         attributes = self.getAttributeNames(table)
         keys = self.getKeyAttributes(table)
         
@@ -165,15 +174,12 @@ class StockDB:
         return attributes
     
     # Updates a given attribute of a given stock with the given value.
-    def updateStockAttribute(self, stock_id, attribute, value): 
+    def updateStockAttribute(self, stockID, attribute, value): 
         attribute = attribute.lower()
-        
-        # In case a statement is unable to execute
         if value == None:
             value = -1
-        
-        query = StockQueries.getStockUpdateQuery(attribute, value, stock_id)
-        
+            
+        query = StockQueries.getStockUpdateQuery(attribute, value, stockID)
         try:
             self.cursor.execute(query)
             self.cnx.commit()
@@ -183,11 +189,12 @@ class StockDB:
             print("Unexpected error in updateStockAttribute:", sys.exc_info()[0])   
     
     # Updates a given attribute of a given stock with the given value.
-    def updateStockHistoryAttribute(self, stock_id, attribute, value): 
+    def updateStockHistoryAttribute(self, stockID, attribute, value): 
         attribute = attribute.lower()
+        if value == None:
+            value = -1
         
-        query = StockQueries.getStockHistoryUpdateQuery(attribute, value, stock_id)
-        
+        query = StockQueries.getStockHistoryUpdateQuery(attribute, value, stockID)
         try:
             self.cursor.execute(query)
             self.cnx.commit()
@@ -195,4 +202,20 @@ class StockDB:
             print("Invalid MySQL query in updateStockAttribute. \nUnable to execute query '{}'".format(query))
         except:
             print("Unexpected error in updateStockAttribute:", sys.exc_info()[0])   
+    
+    # Gets the average value of the stock for a given date
+    def getStockHistoryAverageValue(self, stockID, date):
+        query = StockQueries.getAvgStockHistoryQuery(stockID, date)
+        try:
+            self.cursor.execute(query)
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in getStockHistoryAverageValue. \nUnable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in getStockHistoryAverageValue:", sys.exc_info()[0])  
+        
+        result = []
+        for row in self.cursor:
+            result.append(row['stock_history_average'])
+        
+        return result[0]    # Result will always be 1 value, since its a MySQL AVG call.
     
