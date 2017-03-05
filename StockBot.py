@@ -15,19 +15,14 @@ class StockBot:
         except:
             print("Unexpected error in StockBot init:", sys.exc_info()[0])
     
-    # Actively monitors and updates stock information.
-    def run(self):
-        self.monitor()
-        self.updateStockAverages()
-    
     # Import the stock_id keys from the StockBot.stock table.
-    def importStocksToMonitor(self):
+    def importStocksToMonitor(self) -> None:
         keys = self.sd.getKeyValues('stock')
         for key in keys:
             self.stocksToMonitor.append(key)
             
     # Attempt to get current price information for the stocks in the database.
-    def monitor(self):
+    def monitor(self) -> None:
         for stockID in self.stocksToMonitor:
             yahoo = Share(stockID)
             try:
@@ -36,38 +31,39 @@ class StockBot:
                 print("Yahoo finance is currently unavailable.")
             except:
                 print("Unexpected error in monitor:", sys.exc_info()[0])
-    
-    # Update the averages for every stock in the database
-    def updateStockAverages(self):
-        attributes = self.sd.getAttributeNamesNotKeys('stock')
-        for stock_id in self.stocksToMonitor:
-            for attr in attributes:
-                average = self.sd.avgActivity(stock_id, attr)
-                self.sd.updateStockAttribute(stock_id, attr, average)
-    
-    # Updates the stock_history table for the current date. 
-    # Only meant to be used after trading is closed.
-    def updateStockHistory(self):
-        for stockID in self.stocksToMonitor:
-            currentDate = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S')[:10]
-            yahoo = Share(stockID)
-            avg = self.sd.getStockHistoryAverageValue(stockID, currentDate)
-            
-            self.postStockHistory(stockID, currentDate, yahoo.get_open(), avg, yahoo.get_price())
             
     # Add a new entry to the StockBot.stock table.
-    def postStock(self, stockID, avgOpen, avgDaily, avgClose):
+    def postStock(self, stockID: str, avgOpen: float, avgDaily: float, avgClose: float) -> None:
         self.sd.addStock(stockID, avgOpen, avgDaily, avgClose)
         
     # Add a new entry to the StockBot.stock_activity table.
-    def postStockActivity(self, stockID, price):
+    def postStockActivity(self, stockID: str, price: float) -> None:
         timestamp = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S')
         currentDate = timestamp[:10]
         currentTime = timestamp[11:]
         self.sd.addStockActivity(stockID, currentDate, currentTime, price)
 
-    # Add a new entry to the StockBot.stock_history table.
-    # Only for use after trading hours; when the history table will be updated.
-    def postStockHistory(self, stockID, currentDate, stockOpen, stockAvg, stockClose):
-        self.sd.addStockHistory(stockID, currentDate, stockOpen, stockAvg, stockClose)
-        
+    # Updates the stock_history table for the current date. 
+    # Only meant to be used after trading is closed.
+    def postStockHistory(self) -> None:
+        for stockID in self.stocksToMonitor:
+            currentDate = datetime.fromtimestamp(time()).strftime('%Y-%m-%d %H:%M:%S')[:10]
+            yahoo = Share(stockID)
+            average = self.sd.getStockHistoryAverageValue(stockID, currentDate)
+            
+            self.sd.addStockHistory(stockID, currentDate, yahoo.get_open(), average, 
+                                    yahoo.get_price(), yahoo.get_days_high(), yahoo.get_days_low())
+
+    # Actively monitors and updates stock information.
+    def run(self) -> None:
+        self.monitor()
+        self.updateStockAverages()
+
+    # Update the averages for every stock in the database
+    def updateStockAverages(self) -> None:
+        attributes = self.sd.getAttributeNamesNotKeys('stock')
+        for stockID in self.stocksToMonitor:
+            for attr in attributes:
+                averageDaily = self.sd.getAverageStock(attr, stockID)
+                self.sd.updateTableAttribute('stock', stockID, attr, averageDaily)
+                

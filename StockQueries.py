@@ -1,97 +1,104 @@
+from builtins import str
 
 # A wrapper class of MySQL queries and getters for the StockBot database.
 class StockQueries:
     
     # Hardcoded SQL statement for getting column/attribute names
-    attributeNames = ("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
-                      "WHERE TABLE_SCHEMA = 'StockBot' AND TABLE_NAME = '{}'")
+    _attributeNamesQuery = ("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+                            "WHERE TABLE_SCHEMA = 'StockBot' AND TABLE_NAME = '{}'")
+    
+    # Hardcoded select statements to get the averages of values from the stock_history table.
+    _averageStockQuery = ("SELECT AVG(stock_activity_price) AS average FROM stock_activity WHERE stock_id = '{}'")
+    _averageStockOpenQuery = ("SELECT AVG(stock_history_open) AS average FROM stock_history WHERE stock_id = '{}'")
+    _averageStockCloseQuery = ("SELECT AVG(stock_history_close) AS average FROM stock_history WHERE stock_id = '{}'")
+    
+    _averageStockHistoryQuery = ("SELECT AVG(stock_activity_price) AS stock_history_average FROM stock_activity "
+                                 "WHERE stock_id = '{}' AND stock_activity_date = '{}'")
     
     # Hardcoded inserts for stock, stock_activity, and stock_history tables.
-    insStock = ("INSERT INTO stock (stock_id, avg_open, avg_daily, avg_close) "
-                "VALUES (%s, %s, %s, %s)") 
-    insStockActivity = ("INSERT INTO stock_activity (stock_id, stock_activity_date, stock_activity_time, stock_activity_price) "
-                         "VALUES (%s, %s, %s, %s)")  
-    insStockHistory = ("INSERT INTO stock_history (stock_id, stock_history_date, stock_history_open, stock_history_average, stock_history_close) " 
-                       "VALUES (%s, %s, %s, %s, %s)")
+    _insStockQuery = ("INSERT INTO stock (stock_id, average_open, average_daily, average_close) "
+                      "VALUES (%s, %s, %s, %s)") 
+    _insStockActivityQuery = ("INSERT INTO stock_activity (stock_id, stock_activity_date, stock_activity_time, stock_activity_price) "
+                              "VALUES (%s, %s, %s, %s)")  
+    _insStockHistoryQuery = ("INSERT INTO stock_history (stock_id, stock_history_date, stock_history_open, stock_history_average, "
+                             "stock_history_close, stock_history_high, stock_history_low) " 
+                             "VALUES (%s, %s, %s, %s, %s, %s, %s)")
     
+    # Hardcoded select statements to grab keys from the tables.
+    _keyValuesStockQuery = ("SELECT stock_id FROM stock")
+    _keyValuesStockActivityQuery = ("SELECT stock_id, stock_activity_date, stock_activity_time FROM stock_activity")
+    _keyValuesStockHistoryQuery = ("SELECT stock_id, stock_history_date FROM stock_history")
+    
+    # Hardcoded select statement to grab primary key column names from the tables.
+    _primaryKeyQuery = ("SELECT COLUMN_NAME AS primary_key FROM INFORMATION_SCHEMA.COLUMNS "
+                       "WHERE TABLE_SCHEMA = 'StockBot' AND TABLE_NAME = '{}' AND "
+                       "COLUMN_KEY = 'PRI'")
+     
+    # Hardcoded update statements to change values in the StockBot.stock table.
+    _updateQuery = ("UPDATE {} SET {} = {} WHERE stock_id = '{}'")
+    
+    # Returns the attributeNamesQuery.
+    @staticmethod
+    def getAttributeNamesQuery() -> str:
+        return StockQueries._attributeNamesQuery
+        
+    # Returns the average stock query
+    @staticmethod
+    def getAverageStockQuery() -> str:
+        return StockQueries._averageStockQuery
+    
+    # Returns the average stock open query
+    @staticmethod
+    def getAverageStockOpenQuery() -> str:
+        return StockQueries._averageStockOpenQuery
+    
+    #  Returns the average stock close query
+    @staticmethod
+    def getAverageStockCloseQuery() -> str:
+        return StockQueries._averageStockCloseQuery
+    
+    # Returns a query for the average price for the stock_history table
+    @staticmethod
+    def getAverageStockHistoryQuery() -> str:
+        return StockQueries._averageStockHistoryQuery
+        
+    # Returns the primaryKeyQuery
+    @staticmethod
+    def getPrimaryKeyQuery() -> str:
+        return StockQueries._primaryKeyQuery
+        
     # Returns the correct insert query based on the given table.
     @staticmethod
-    def getInsertQuery(table):
+    def getTableInsertQuery(table: str) -> str:
         table = table.lower()
         
         if table == 'stock':
-            return StockQueries.insStock
+            return StockQueries._insStockQuery
         elif table == 'stock_activity':
-            return StockQueries.insStockActivity
+            return StockQueries._insStockActivityQuery
         elif table == 'stock_history':
-            return StockQueries.insStockHistory
+            return StockQueries._insStockHistoryQuery
         else:
-            print("Invalid table input to StockQueries.getInsertQuery.")
+            print("Invalid table input to StockQueries.getTableInsertQuery.")
             return "Invalid"
-        
-    # Hardcoded select statement to grab primary key column names from the tables.
-    primaryKey = ("SELECT COLUMN_NAME AS primary_key FROM INFORMATION_SCHEMA.COLUMNS "
-                  "WHERE TABLE_SCHEMA = 'StockBot' AND TABLE_NAME = '{}' AND "
-                  "COLUMN_KEY = 'PRI'")
-     
-    # Returns the correct primary keys query for the given table.
-    @staticmethod
-    def getQueryKeyAttributes(table):
-        table = table.lower()
-        return StockQueries.primaryKey.format(table)
-    
-    # Hardcoded select statements to grab keys from the tables.
-    keyValuesStock = ("SELECT stock_id FROM stock")
-    keyValuesStockActivity = ("SELECT stock_id, stock_activity_date, stock_activity_time FROM stock_activity")
-    keyValuesStockHistory = ("SELECT stock_id, stock_history_date FROM stock_history")
     
     # Returns the correct table key values query based on the given table.
     @staticmethod
-    def getTableKeyValues(table):
+    def getTableKeyValuesQuery(table: str) -> str:
         table = table.lower()
         
         if table == 'stock':
-            return StockQueries.keyValuesStock
+            return StockQueries._keyValuesStockQuery
         elif table == 'stock_activity':
-            return StockQueries.keyValuesStockActivity
+            return StockQueries._keyValuesStockActivityQuery
         elif table == 'stock_history':
-            return StockQueries.keyValuesStockHistory
+            return StockQueries._keyValuesStockHistoryQuery
         else:
-            print("Invalid table passed to StockQueries.getTableKeys.")
+            print("Invalid table passed to StockQueries.getTableKeyValuesQuery.")
             return "Invalid"
-        
-    # Hardcoded update statements to change values in the StockBot.stock table.
-    updStock = ("UPDATE stock SET {} = {} WHERE stock_id = '{}'")
     
-    # Returns the correct update stock query based on the given attribute.
+    # Returns the updateQuery
     @staticmethod
-    def getStockUpdateQuery(attribute, value, stockID):
-        attribute = attribute.lower()
-        return StockQueries.updStock.format(attribute, value, stockID)
-    
-    # Hardcoded update statements to update values in the stock_history table.
-    updStockHistory = ("UPDATE stock_history SET {} = {} WHERE stock_id = '{}'")
-    
-    # Returns the correct update stock history query based on the given attribute.
-    @staticmethod
-    def getStockHistoryUpdateQuery(attribute, value, stockID):
-        attribute = attribute.lower()
-        return StockQueries.updStockHistory.format(attribute, value, stockID)
-    
-    # Hardcoded select statements to get the averages of values from the stock_activity table.
-    avgStock = ("SELECT AVG(stock_history_open) AS {} FROM stock_history WHERE stock_id = '{}'")
-    
-    # Returns the correct avg stock query based on the given attribute.
-    @staticmethod
-    def getAvgStockQuery(attribute, stockID):
-        attribute = attribute.lower()
-        return StockQueries.avgStock.format(attribute, stockID)
-    
-    avgStockHistory = ("SELECT AVG(stock_activity_price) AS stock_history_average FROM stock_activity "
-                       "WHERE stock_id = '{}' AND stock_activity_date = '{}'")
-    
-    # Returns a query for the average price for the given date; for use with stock_history table.
-    @staticmethod
-    def getAvgStockHistoryQuery(stockID, date):
-        return StockQueries.avgStockHistory.format(stockID, date)
+    def getUpdateQuery() -> str:
+        return StockQueries._updateQuery
     
