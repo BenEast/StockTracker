@@ -1,4 +1,4 @@
-from builtins import str
+import logging
 
 # A wrapper class of MySQL queries and getters for the StockBot database.
 class StockQueries:
@@ -72,14 +72,15 @@ class StockQueries:
     def getTableInsertQuery(table: str) -> str:
         table = table.lower()
         
-        if table == 'stock':
+        if table == "stock":
             return StockQueries._insStockQuery
-        elif table == 'stock_activity':
+        elif table == "stock_activity":
             return StockQueries._insStockActivityQuery
-        elif table == 'stock_history':
+        elif table == "stock_history":
             return StockQueries._insStockHistoryQuery
         else:
-            print("Invalid table input to StockQueries.getTableInsertQuery.")
+            print("Invalid table input to StockQueries.getTableInsertQuery().")
+            logging.warning("Invalid table input to StockQueries.getTableInsertQuery().")
             return "Invalid"
     
     # Returns the correct table key values query based on the given table.
@@ -87,14 +88,15 @@ class StockQueries:
     def getTableKeyValuesQuery(table: str) -> str:
         table = table.lower()
         
-        if table == 'stock':
+        if table == "stock":
             return StockQueries._keyValuesStockQuery
-        elif table == 'stock_activity':
+        elif table == "stock_activity":
             return StockQueries._keyValuesStockActivityQuery
-        elif table == 'stock_history':
+        elif table == "stock_history":
             return StockQueries._keyValuesStockHistoryQuery
         else:
-            print("Invalid table passed to StockQueries.getTableKeyValuesQuery.")
+            print("Invalid table passed to StockQueries.getTableKeyValuesQuery().")
+            logging.warning("Invalid table passed to StockQueries.getTableKeyValuesQuery().")
             return "Invalid"
     
     # Returns the updateQuery
