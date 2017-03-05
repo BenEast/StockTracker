@@ -68,8 +68,8 @@ class StockDB:
         logging.info("StockDB.addStockActivity() completed.\n")    
         
     # Adds a stock history entry with the given parameters to the StockBot.stock_history table.
-    def addStockHistory(self, stockID: str, currentDate, stockOpen: float, stockAvg: float, stockClose: float, 
-                        stockHigh: float, stockLow: float) -> None:
+    def addStockHistory(self, stockID: str, currentDate, stockOpen: float, stockAvg: float, 
+                        stockClose: float, stockHigh: float, stockLow: float) -> None:
         logging.info("StockDB.addStockHistory() called.")
         
         try:

@@ -1,5 +1,4 @@
 import sys, logging
-from time import time
 from yahoo_finance import Share, YQLQueryError
 from StockDB import StockDB
 from datetime import datetime
@@ -29,8 +28,8 @@ class StockBot:
         logging.info("StockBot.monitor() called.")
         
         for stockID in self.stocksToMonitor:
-            yahoo = Share(stockID)
             try:
+                yahoo = Share(stockID)
                 self.postStockActivity(stockID, yahoo.get_price())
             except YQLQueryError:
                 print("Yahoo finance is currently unavailable.")
@@ -51,7 +50,7 @@ class StockBot:
     def postStockActivity(self, stockID: str, price: float) -> None:
         logging.info("StockBot.postStockActivity() called.")
         
-        timestamp = datetime.fromtimestamp(time()).strftime("%Y-%m-%d %H:%M:%S")
+        timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
         currentDate = timestamp[:10]
         currentTime = timestamp[11:]
         self.sd.addStockActivity(stockID, currentDate, currentTime, price)
@@ -64,14 +63,15 @@ class StockBot:
         logging.info("StockBot.postStockHistory() called.")
         
         for stockID in self.stocksToMonitor:
-            currentDate = datetime.fromtimestamp(time()).strftime("%Y-%m-%d %H:%M:%S")[:10]
-            yahoo = Share(stockID)
+            currentDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")[:10]
             average = self.sd.getStockHistoryAverageValue(stockID, currentDate)
+            yahoo = Share(stockID)
             
             self.sd.addStockHistory(stockID, currentDate, yahoo.get_open(), average, 
                                     yahoo.get_price(), yahoo.get_days_high(), yahoo.get_days_low())
 
         logging.info("StockBot.postStockHistory() completed.\n")
+        
     # Actively monitors and updates stock information.
     def run(self) -> None:
         self.monitor()
