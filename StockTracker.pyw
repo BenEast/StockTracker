@@ -1,15 +1,18 @@
 from StockDB import StockDB
 from StockBot import StockBot
 from datetime import datetime
-import time, sched
+from sched import scheduler
+import time
 
 #-----------------------------------------------------------------------------------
 # TODO:
 # -Update exception handling to create log files when necessary.
+# -Update to run every x minutes starting at time x
 # -Allow isDuringTrading/isAfterTrading to check based on the user's timezone.
 # -Refactor more (and more and more)
 # -Allow adding/removing stocks from the DB without directly altering the DB.
 # -Allow usage of custom DB/multiple DBs in main
+# -Create UI for data display?
 #-----------------------------------------------------------------------------------
 
 # Return true if it's after trading hours for the NYSE.
@@ -35,7 +38,7 @@ def main():
     dayHistoryUpdated = False
     sd = StockDB('ben', 'pass', '127.0.0.1', 'stockbot')
     sb = StockBot(sd)
-    trackerScheduler = sched.scheduler(time.time, time.sleep)
+    trackerScheduler = scheduler(time.time, time.sleep)
 
     # Runs as a background process until terminated.
     while(True):
@@ -45,7 +48,7 @@ def main():
         # If it's not the weekend and during trading hours, monitor the stocks.
         if (currentDay < 5) and (isDuringTrading(currentTime)):
             dayHistoryUpdated = False
-            trackerScheduler.enter(5, 1, sb.run, ())
+            trackerScheduler.enter(600, 1, sb.run, ())
             trackerScheduler.run()
             
         # Update stock_history table at the end of trading for the day.

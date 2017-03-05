@@ -55,7 +55,7 @@ class StockDB:
                                 (stockID, currentDate, stockOpen, stockAvg, stockClose, stockHigh, stockLow))
             self.cnx.commit()
         except mysql_IntegrityError:
-            print("Key ({}, {}, {}) already exists in table stock_history!".format(stockID, currentDate))
+            print("Key ({}, {}) already exists in table stock_history!".format(stockID, currentDate))
         except mysql_DataError:
             print("Invalid inputs for stock_history MySQL query.")
         except TypeError:
@@ -86,7 +86,8 @@ class StockDB:
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in getAverageStock. \nUnable to execute query '{}'".format(query))
+            print("Invalid MySQL query in getAverageStock.\n"
+                  "Unable to execute query '{}'".format(query))
         except:
             print("Unexpected error in getAverageStock:", sys.exc_info()[0])
             
@@ -96,11 +97,12 @@ class StockDB:
     # Gets the attribute names of a given table in the database.
     def getAttributeNames(self, table: str):
         table = table.lower()
-        query = StockQueries.attributeNamesQuery.format(table)  
+        query = StockQueries.getAttributeNamesQuery().format(table)  
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in getAttributeNames. \nUnable to execute query '{}'".format(query))
+            print("Invalid MySQL query in getAttributeNames.\n"
+                  "Unable to execute query '{}'".format(query))
         except:
             print("Unexpected error in getAttributeNames:", sys.exc_info()[0])
             
@@ -128,7 +130,8 @@ class StockDB:
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in getKeyAttributes. \nUnable to execute query '{}'".format(query))
+            print("Invalid MySQL query in getKeyAttributes.\n"
+                  "Unable to execute query '{}'".format(query))
         except:
             print("Unexpected error in getKeyAttributes:", sys.exc_info()[0]) 
             
@@ -145,7 +148,8 @@ class StockDB:
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in getKeyValues. \nUnable to execute query '{}'".format(query))
+            print("Invalid MySQL query in getKeyValues.\n"
+                  "Unable to execute query '{}'".format(query))
         except:
             print("Unexpected error in getKeyValues:", sys.exc_info()[0])
         
@@ -161,7 +165,8 @@ class StockDB:
         try:
             self.cursor.execute(query)
         except mysql_ProgrammingError:
-            print("Invalid MySQL query in getStockHistoryAverageValue. \nUnable to execute query '{}'".format(query))
+            print("Invalid MySQL query in getStockHistoryAverageValue.\n"
+                  "Unable to execute query '{}'".format(query))
         except:
             print("Unexpected error in getStockHistoryAverageValue:", sys.exc_info()[0])  
         

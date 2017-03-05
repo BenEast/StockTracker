@@ -65,5 +65,5 @@ class StockBot:
         for stockID in self.stocksToMonitor:
             for attr in attributes:
                 averageDaily = self.sd.getAverageStock(attr, stockID)
-                self.sd.updateTableAttribute('stock', stockID, attr, averageDaily)
+                self.sd.updateTableAttribute('stock', attr, averageDaily, stockID)
                 
