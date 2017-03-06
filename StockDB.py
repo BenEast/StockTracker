@@ -104,11 +104,11 @@ class StockDB:
     def getAverageStock(self, attribute: str, stockID: str) -> float:
         logging.info("StockDB.getAverageStock() called.")
         
-        if attribute == "average_daily":
+        if attribute == "stock_average_daily":
             query = StockQueries.getAverageStockQuery().format(stockID)
-        elif attribute == "average_open":
+        elif attribute == "stock_average_open":
             query = StockQueries.getAverageStockOpenQuery().format(stockID)
-        elif attribute == "average_close":
+        elif attribute == "stock_average_close":
             query = StockQueries.getAverageStockCloseQuery().format(stockID)
         else:
             query = "Invalid"
@@ -241,6 +241,29 @@ class StockDB:
         logging.info("StockDB.getStockHistoryAverageValue() completed.\n")
         return result[0]    # Result will always be a singleton, since its a MySQL AVG call.
     
+    # Gets all table names with the given attribute.
+    def getTablesWithAttribute(self, attribute: str) -> str:
+        logging.info("StockDB.getTablesWithAttribute() called.")
+        
+        query = StockQueries.getAllTablesWithAttributeQuery().format(attribute)
+        try:
+            self.cursor.execute(query)
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in StockDB.getTablesWithAttribute().\n"
+                  "Unable to execute query '{}'".format(query))
+            logging.warning("Invalid MySQL query in StockDB.getTablesWithAttribute().\n"
+                            "Unable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in StockDB.getTablesWithAttribute():", sys.exc_info()[0])
+            logging.warning("Unexpected error in StockDB.getTablesWithAttribute():", sys.exc_info()[0])  
+        
+        result = []
+        for row in self.cursor:
+            result.append(row["TABLE_NAME"])
+        
+        logging.info("StockDB.getTablesWithAttribute() completed.\n")
+        return result    # Result will always be a singleton, since its a MySQL AVG call.
+    
     # Attempts to execute the database query parameters and outputs the results to the console.
     def queryDB(self, query: str) -> None:
         logging.info("StockDB.queryDB() called.")
@@ -269,6 +292,27 @@ class StockDB:
         logging.info("StockDB.queryDB() completed.\n")
         return result
     
+    # Removes all entries with a given stockID from a given table.
+    def deleteFromTable(self, table: str, stockID: str) -> None:
+        logging.info("StockDB.deleteFromTable() called.")
+        
+        table = table.lower()
+    
+        query = StockQueries.getDeleteQuery().format(table, stockID)
+        try:
+            self.cursor.execute(query)
+            self.cnx.commit()
+        except mysql_ProgrammingError:
+            print("Invalid MySQL query in StockDB.deleteFromTable().\n"
+                  "Unable to execute query '{}'".format(query))
+            logging.warning("Invalid MySQL query in StockDB.deleteFromTable().\n"
+                            "Unable to execute query '{}'".format(query))
+        except:
+            print("Unexpected error in StockDB.deleteFromTable():", sys.exc_info()[0])
+            logging.warning("Unexpected error in StockDB.deleteFromTable():", sys.exc_info()[0])
+            
+        logging.info("StockDB.deleteFromTable() completed.\n")
+            
     # Updates a given table and attribute with a given value.
     def updateTableAttribute(self, table: str, attribute: str, value, stockID: str) -> None:
         logging.info("StockDB.updateTableAttribute() called.")

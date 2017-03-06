@@ -3,20 +3,27 @@ import logging
 # A wrapper class of MySQL queries and getters for the StockBot database.
 class StockQueries:
     
+    #Hardcoded SQL statement for getting all tables with a given attribute name
+    _allTablesWithAttributeQuery = ("SELECT DISTINCT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS "
+                                    "WHERE COLUMN_NAME IN ('{}') AND TABLE_SCHEMA = 'StockBot'")
+    
     # Hardcoded SQL statement for getting column/attribute names
     _attributeNamesQuery = ("SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS "
                             "WHERE TABLE_SCHEMA = 'StockBot' AND TABLE_NAME = '{}'")
     
     # Hardcoded select statements to get the averages of values from the stock_history table.
-    _averageStockQuery = ("SELECT AVG(stock_activity_price) AS average FROM stock_activity WHERE stock_id = '{}'")
+    _averageStockQuery = ("SELECT AVG(stock_history_average) AS average FROM stock_history WHERE stock_id = '{}'")
     _averageStockOpenQuery = ("SELECT AVG(stock_history_open) AS average FROM stock_history WHERE stock_id = '{}'")
     _averageStockCloseQuery = ("SELECT AVG(stock_history_close) AS average FROM stock_history WHERE stock_id = '{}'")
     
     _averageStockHistoryQuery = ("SELECT AVG(stock_activity_price) AS stock_history_average FROM stock_activity "
                                  "WHERE stock_id = '{}' AND stock_activity_date = '{}'")
     
+    # Hardcoded remove statements to remove a value from stock, or from all tables.
+    _deleteQuery = ("DELETE FROM {} WHERE stock_id = '{}'")
+    
     # Hardcoded inserts for stock, stock_activity, and stock_history tables.
-    _insStockQuery = ("INSERT INTO stock (stock_id, average_open, average_daily, average_close) "
+    _insStockQuery = ("INSERT INTO stock (stock_id, stock_average_open, stock_average_daily, stock_average_close) "
                       "VALUES (%s, %s, %s, %s)") 
     _insStockActivityQuery = ("INSERT INTO stock_activity (stock_id, stock_activity_date, stock_activity_time, stock_activity_price) "
                               "VALUES (%s, %s, %s, %s)")  
@@ -36,6 +43,11 @@ class StockQueries:
      
     # Hardcoded update statements to change values in the StockBot.stock table.
     _updateQuery = ("UPDATE {} SET {} = {} WHERE stock_id = '{}'")
+    
+    # Returns the allTablesWithAttributeQuery
+    @staticmethod
+    def getAllTablesWithAttributeQuery():
+        return StockQueries._allTablesWithAttributeQuery
     
     # Returns the attributeNamesQuery.
     @staticmethod
@@ -62,11 +74,16 @@ class StockQueries:
     def getAverageStockHistoryQuery() -> str:
         return StockQueries._averageStockHistoryQuery
         
+    # Returns removeFromStockQuery
+    @staticmethod
+    def getDeleteQuery() -> str:
+        return StockQueries._deleteQuery    
+        
     # Returns the primaryKeyQuery
     @staticmethod
     def getPrimaryKeyQuery() -> str:
         return StockQueries._primaryKeyQuery
-        
+    
     # Returns the correct insert query based on the given table.
     @staticmethod
     def getTableInsertQuery(table: str) -> str:

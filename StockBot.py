@@ -41,9 +41,9 @@ class StockBot:
         logging.info("StockBot.monitor() completed.\n")
         
     # Add a new entry to the StockBot.stock table.
-    def postStock(self, stockID: str, avgOpen: float, avgDaily: float, avgClose: float) -> None:
+    def postStock(self, stockID: str) -> None:
         logging.info("StockBot.postStock() called.")
-        self.sd.addStock(stockID, avgOpen, avgDaily, avgClose)
+        self.sd.addStock(stockID, 0, 0, 0)
         logging.info("StockBot.postStock() completed.\n")
         
     # Add a new entry to the StockBot.stock_activity table.
@@ -71,6 +71,18 @@ class StockBot:
                                     yahoo.get_price(), yahoo.get_days_high(), yahoo.get_days_low())
 
         logging.info("StockBot.postStockHistory() completed.\n")
+    
+    # Removes the given stockID from all tables, or just the stock table based on allTables.
+    def removeStock(self, stockID: str, allTables: bool) -> None:   
+        logging.info("StockBot.removeStock() called.")
+         
+        if allTables:
+            for table in self.sd.getTablesWithAttribute('stock_id'):
+                self.sd.deleteFromTable(table, stockID)
+        else:
+            self.sd.deleteFromTable("stock", stockID)
+            
+        logging.info("StockBot.removeStock() completed.\n")
         
     # Actively monitors and updates stock information.
     def run(self) -> None:
