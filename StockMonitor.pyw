@@ -3,9 +3,8 @@ from StockBot import StockBot
 from datetime import datetime
 from sched import scheduler
 from pytz import timezone
-from yahoo_finance import Share
 import time, os, sys 
-import logging, argparse
+import logging
 
 #-----------------------------------------------------------------------------------
 # TODO:
@@ -51,7 +50,8 @@ def initializeLogDirectory():
 # Main body of the program.
 def main():
     logPath = initializeLogDirectory()
-    logging.basicConfig(filename = logPath, level = logging.DEBUG, format="%(levelname)s::%(asctime)s: %(message)s")
+    logging.basicConfig(filename = logPath, level = logging.DEBUG, 
+                        format="%(levelname)s::%(asctime)s: %(message)s")
     sd = StockDB("ben", "pass", "127.0.0.1", "stockbot")
     sb = StockBot(sd)
     
@@ -67,7 +67,7 @@ def main():
         # If it's not the weekend and during trading hours, monitor the stocks.
         if (currentDay < 5) and (isDuringTrading(currentTime)):
             dayHistoryUpdated = False
-            trackerScheduler.enter(600, 1, sb.run, ())
+            trackerScheduler.enter(300, 1, sb.run, ())
             trackerScheduler.run()
 
         # Update stock_history table at the end of trading for the day.

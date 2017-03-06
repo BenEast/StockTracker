@@ -32,7 +32,8 @@ def initializeLogDirectory():
 # Main body of the program.
 def main():
     logPath = initializeLogDirectory()
-    logging.basicConfig(filename = logPath, level = logging.DEBUG, format="%(levelname)s::%(asctime)s: %(message)s")
+    logging.basicConfig(filename = logPath, level = logging.DEBUG, 
+                        format="%(levelname)s::%(asctime)s: %(message)s")
     sd = StockDB("ben", "pass", "127.0.0.1", "stockbot")
     sb = StockBot(sd)
     
@@ -53,6 +54,7 @@ def main():
         yahoo = Share(stock)
         if not yahoo.get_price() == None:
             sb.postStock(stock)
+            logging.info("Stock '{}' posted to database.".format(stock))
         else:
             print("Invalid stock argument passed with --add.")
             logging.warning("Invalid stock argument passed with --add.")
@@ -61,6 +63,7 @@ def main():
         stock = args.remove.upper()
         if stock in sb.stocksToMonitor:
             sb.removeStock(stock, args.allTables)
+            logging.info("Stock '{}' removed from database. allTables = {}".format(stock, args.allTables))
         else:
             print("Invalid stock argument passed with --remove.")
             logging.warning("Invalid stock argument passed with --remove.")      
