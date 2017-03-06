@@ -21,7 +21,7 @@ class StockDB:
             print("Unable to initialize StockDB connection. Unexpected error:", sys.exc_info()[0])
             logging.warning("Unable to initialize StockDB connection. Unexpected error:", sys.exc_info()[0])
 
-        logging.info("StockDB initialized.\n")
+        logging.info("StockDB initialized.")
 
     # Adds a stock with the given parameters to the StockBot.stock table in the MySQL database.
     def addStock(self, stockID: str, avgOpen: float, avgDaily: float, avgClose: float) -> None:

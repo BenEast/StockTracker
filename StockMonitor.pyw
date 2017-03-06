@@ -4,7 +4,7 @@ from datetime import datetime
 from sched import scheduler
 from pytz import timezone
 import time, os, sys 
-import logging
+import logging, gc
 
 #-----------------------------------------------------------------------------------
 # TODO:
@@ -49,6 +49,7 @@ def initializeLogDirectory():
         
 # Main body of the program.
 def main():
+    gc.enable() # Enable automatic garbage collection
     logPath = initializeLogDirectory()
     logging.basicConfig(filename = logPath, level = logging.DEBUG, 
                         format="%(levelname)s::%(asctime)s: %(message)s")
@@ -58,9 +59,10 @@ def main():
     dayHistoryUpdated = False
     trackerScheduler = scheduler(time.time, time.sleep)
     est_tz = timezone("US/Eastern")
+    
     # Runs as a background process until terminated.
     while(True):
-        sb.importStocksToMonitor() # Constantly update the stocks to be monitored
+        gc.collect() # Force garbage collection
         currentTime = datetime.now(est_tz).strftime("%Y-%m-%d %H:%M:%S")[11:]
         currentDay = datetime.today().weekday()
 

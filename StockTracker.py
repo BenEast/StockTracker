@@ -2,7 +2,7 @@ from StockDB import StockDB
 from StockBot import StockBot
 from datetime import datetime
 from yahoo_finance import Share
-import os, sys, logging, argparse
+import os, sys, logging, argparse, gc
 
 #-----------------------------------------------------------------------------------
 # TODO:
@@ -31,6 +31,7 @@ def initializeLogDirectory():
         
 # Main body of the program.
 def main():
+    gc.enable()
     logPath = initializeLogDirectory()
     logging.basicConfig(filename = logPath, level = logging.DEBUG, 
                         format="%(levelname)s::%(asctime)s: %(message)s")

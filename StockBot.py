@@ -15,7 +15,7 @@ class StockBot:
             print("Unexpected error in StockBot init:", sys.exc_info()[0])
             logging.warning("Unexpected error in StockBot init:", sys.exc_info()[0])
             
-        logging.info("StockBot initialized.\n")
+        logging.info("StockBot initialized.")
         
     # Import the stock_id keys from the StockBot.stock table.
     def importStocksToMonitor(self) -> None:
