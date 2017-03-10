@@ -4,15 +4,8 @@ from datetime import datetime
 from yahoo_finance import Share
 import os, sys, logging, argparse, gc
 
-#-----------------------------------------------------------------------------------
-# TODO:
-# -Allow usage of custom DB/multiple DBs in main
-# -Refactor (a lot)
-# -Create UI for data display
-#-----------------------------------------------------------------------------------
-
 # Sets up a log directory and a log file if they do not exist.
-def initializeLogDirectory():
+def initializeLogDirectory() -> None:
     logsPath = os.path.dirname(os.path.abspath(sys.argv[0])) + "/logs/"
     if not os.path.exists(logsPath):
         os.makedirs(logsPath)
@@ -41,13 +34,13 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-a", "--add", type = str, help = "Add a stock to the database.")
     parser.add_argument("-r", "--remove", type = str, help = "Remove a stock from the database.")
-    parser.add_argument("--allTables", action="store_true")
-    parser.add_argument("-d", "--display", action="store_true", help = "Display the stocks in the database.")
+    parser.add_argument("--allTables", action = "store_true")
+    parser.add_argument("-d", "--display", action = "store_true", help = "Display the stocks in the database.")
     args = parser.parse_args()
-    
+
     # Display all stocks
     if args.display:
-        for stock in sd.getKeyValues('stock'):
+        for stock in sd.getKeyValues('stock'): # CHANGE TO WORK WITH SB
             print(stock)
     # Handle /add command
     elif not args.add == None:
@@ -55,6 +48,7 @@ def main():
         yahoo = Share(stock)
         if not yahoo.get_price() == None:
             sb.postStock(stock)
+            print("Stock '{}' posted to database.".format(stock))
             logging.info("Stock '{}' posted to database.".format(stock))
         else:
             print("Invalid stock argument passed with --add.")
@@ -64,6 +58,7 @@ def main():
         stock = args.remove.upper()
         if stock in sb.stocksToMonitor:
             sb.removeStock(stock, args.allTables)
+            print("Stock '{}' removed from database. allTables = {}".format(stock, args.allTables))
             logging.info("Stock '{}' removed from database. allTables = {}".format(stock, args.allTables))
         else:
             print("Invalid stock argument passed with --remove.")

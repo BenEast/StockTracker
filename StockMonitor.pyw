@@ -8,8 +8,8 @@ import logging, gc
 
 #-----------------------------------------------------------------------------------
 # TODO:
-# -Allow usage of custom DB/multiple DBs in main
-# -Refactor (a lot)
+# -Implement holiday tracking for StockMonitor
+# -Documentation, reordering, renaming, refactoring
 # -Create UI for data display
 #-----------------------------------------------------------------------------------
 
@@ -24,13 +24,13 @@ def isAfterTrading(currentTime: str) -> bool:
 # Return true if it is currently trading hours, and false otherwise.
 def isDuringTrading(currentTime: str) -> bool:
     currentTime = str(currentTime)
-    if (currentTime > "09:30:00" and currentTime < "16:00:00"):
+    if (currentTime > "09:20:00" and currentTime < "15:50:00"):
         return True
     else:
         return False
 
 # Sets up a log directory and a log file if they do not exist.
-def initializeLogDirectory():
+def initializeLogDirectory() -> None:
     logsPath = os.path.dirname(os.path.abspath(sys.argv[0])) + "/logs/"
     if not os.path.exists(logsPath):
         os.makedirs(logsPath)
@@ -49,7 +49,7 @@ def initializeLogDirectory():
         
 # Main body of the program.
 def main():
-    gc.enable() # Enable automatic garbage collection
+    gc.enable()
     logPath = initializeLogDirectory()
     logging.basicConfig(filename = logPath, level = logging.DEBUG, 
                         format="%(levelname)s::%(asctime)s: %(message)s")
@@ -69,7 +69,7 @@ def main():
         # If it's not the weekend and during trading hours, monitor the stocks.
         if (currentDay < 5) and (isDuringTrading(currentTime)):
             dayHistoryUpdated = False
-            trackerScheduler.enter(300, 1, sb.run, ())
+            trackerScheduler.enter(600, 1, sb.run, ())
             trackerScheduler.run()
 
         # Update stock_history table at the end of trading for the day.
