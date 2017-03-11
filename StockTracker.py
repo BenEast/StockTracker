@@ -39,8 +39,8 @@ def main():
     args = parser.parse_args()
 
     # Display all stocks
-    if args.display:
-        for stock in sd.getKeyValues('stock'): # CHANGE TO WORK WITH SB
+    if args.display: # Will be updated to show a GUI instead of printing stock signs
+        for stock in sd.getKeyValues('stock'):
             print(stock)
     # Handle /add command
     elif not args.add == None:

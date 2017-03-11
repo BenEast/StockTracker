@@ -10,11 +10,11 @@ class tableAttributes:
         self.keys = keys
         self.attributes = attrs
 
-    def getKeys(self):
-        return self.keys
-    
     def getAttributes(self):
         return self.attributes
+
+    def getKeys(self):
+        return self.keys
 
 # A "bot" to check for updates for stocks in the StockBot database and insert new information.
 class StockBot:
@@ -37,6 +37,12 @@ class StockBot:
         
         return out[:len(out) - 2]
     
+    # Import the stock_id keys from the StockBot.stock table.
+    def importStocksToMonitor(self) -> None:
+        self.stocksToMonitor.clear()
+        query = StockQueries.getKeyValuesQuery().format("stock_id", "stock")
+        self.stocksToMonitor = self.sd.getKeyValues(query)
+    
     # Imports the tables, keys, and attributes for the database represented by sd.
     def importTableAttributes(self) -> None:
         query = StockQueries.getTablesQuery().format(self.sd.getDatabaseName())
@@ -50,12 +56,6 @@ class StockBot:
             attr = self.sd.getAttributes(attrQuery) #Includes keys
             
             self.tableDict[t] = tableAttributes(keys, attr)
-        
-    # Import the stock_id keys from the StockBot.stock table.
-    def importStocksToMonitor(self) -> None:
-        self.stocksToMonitor.clear()
-        query = StockQueries.getKeyValuesQuery().format("stock_id", "stock")
-        self.stocksToMonitor = self.sd.getKeyValues(query)
             
     # Attempt to get current price information for the stocks in the database.
     def monitor(self) -> None:

@@ -32,27 +32,6 @@ class StockDB:
         except:
             pass
     
-    # Returns the database name represented by this StockDB
-    def getDatabaseName(self) -> str:
-        return self.databaseName
-    
-    # Gets the average value given an accurate query.
-    def getAverageValue(self, query: str) -> float:
-        try:
-            self.cursor.execute(query)
-        except mysql_ProgrammingError:
-            error = self._mysqlErrorMessage.format("getAverageValue", query)
-            logging.warning(error)
-        except:
-            error = self._unexpectedErrorMessage.format("getAverageValue", sys.exc_info()[0])
-            logging.warning(error)
-            
-        average = 0
-        for row in self.cursor:
-            average = row["average"]
-
-        return average
-            
     # Gets the attribute names of a given table in the database.
     def getAttributes(self, query: str) -> list:
         try:
@@ -70,6 +49,27 @@ class StockDB:
 
         return attributes
     
+    # Gets the average value given an accurate query.
+    def getAverageValue(self, query: str) -> float:
+        try:
+            self.cursor.execute(query)
+        except mysql_ProgrammingError:
+            error = self._mysqlErrorMessage.format("getAverageValue", query)
+            logging.warning(error)
+        except:
+            error = self._unexpectedErrorMessage.format("getAverageValue", sys.exc_info()[0])
+            logging.warning(error)
+            
+        average = 0
+        for row in self.cursor:
+            average = row["average"]
+
+        return average
+    
+    # Returns the database name represented by this StockDB
+    def getDatabaseName(self) -> str:
+        return self.databaseName
+    
     # Gets the attributes that are keys in the given table.
     def getKeyAttributes(self, query: str) -> list:     
         try:
@@ -86,23 +86,6 @@ class StockDB:
             keys.append(row["primary_key"])
 
         return keys
-    
-    # Gets all of the tables in the database, given the correct query.
-    def getTables(self, query: str) -> list:
-        try:
-            self.cursor.execute(query)
-        except mysql_ProgrammingError:
-            error = self._mysqlErrorMessage.format("getTables", query)
-            logging.warning(error)
-        except:
-            error = self._unexpectedErrorMessage.format("getTables", sys.exc_info()[0])
-            logging.warning(error)
-        
-        result = []
-        for row in self.cursor:
-            result.append(row["table_name"])
-
-        return result
         
     # Gets the keys of the tuples in the given table and returns them.
     def getKeyValues(self, query: str) -> list: 
@@ -118,6 +101,23 @@ class StockDB:
         result = []
         for row in self.cursor:
             result.append(row["stock_id"])
+
+        return result
+    
+    # Gets all of the tables in the database, given the correct query.
+    def getTables(self, query: str) -> list:
+        try:
+            self.cursor.execute(query)
+        except mysql_ProgrammingError:
+            error = self._mysqlErrorMessage.format("getTables", query)
+            logging.warning(error)
+        except:
+            error = self._unexpectedErrorMessage.format("getTables", sys.exc_info()[0])
+            logging.warning(error)
+        
+        result = []
+        for row in self.cursor:
+            result.append(row["table_name"])
 
         return result
     
