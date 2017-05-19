@@ -5,12 +5,15 @@ from yahoo_finance import Share
 import os, sys, logging, argparse, gc
 
 # Sets up a log directory and a log file if they do not exist.
-def initializeLogDirectory() -> None:
+# PARAMETERS: None
+# RETURNS: Returns the file path for the log file
+def initializeLogDirectory() -> str:
+    # create the logs directory if it doesn't exist
     logsPath = os.path.dirname(os.path.abspath(sys.argv[0])) + "/logs/"
     if not os.path.exists(logsPath):
         os.makedirs(logsPath)
         
-    # create a log file if necessary
+    # create a log file if it doesn't exist for this date
     logFilePath = (logsPath + "stockTracker-" + 
         str(datetime.now().strftime('%Y-%m-%d %H:%M:%S')[:10]) + ".log")
         
@@ -34,8 +37,14 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-a", "--add", type = str, help = "Add a stock to the database.")
     parser.add_argument("-r", "--remove", type = str, help = "Remove a stock from the database.")
-    parser.add_argument("--allTables", action = "store_true")
-    parser.add_argument("-d", "--display", action = "store_true", help = "Display the stocks in the database.")
+    parser.add_argument("--allTables", action = "store_true") #goes with remove
+    parser.add_argument("-d", "--display", action = "store_true", 
+                        help = "Display the stocks in the database.")
+    #parser.add_argument("--run", action = "store_true", 
+    #                   help = "Run the stock tracker as a background process.")
+    #parser.add_argument("--stop", action = "store_true", 
+    #                   help = "Stop the stock tracker background process if it is running.")
+    
     args = parser.parse_args()
 
     # Display all stocks
@@ -63,7 +72,11 @@ def main():
         else:
             print("Invalid stock argument passed with --remove.")
             logging.warning("Invalid stock argument passed with --remove.")      
-
+    #elif args.run:
+    #   StockMonitor.main() # hopefully runs the process
+    #elif args.stop:
+    #   x = 0 # kill the stock monitor process
+        
     sd.close()
 
 if __name__ == "__main__" :
