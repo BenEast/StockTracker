@@ -11,6 +11,8 @@ Used to add a stock symbol to be tracked.
 
 The command line example `python StockTracker.py --add GOOGL` would add Google's stock to be tracked.
 
+The command "--add" can be optionally replaced with "-a" with the same effect, as in `python StockTracker.py -a GOOGL`.
+
 ### --remove (stock symbol) (optionally --allTables)
 Used to remove a stock symbol that is already being tracked.
 
@@ -20,8 +22,11 @@ To remove stock information from all tables, simply add the `--allTables` argume
 
 For example, `python StockTracker.py --remove GOOGL --allTables` would remove all data from all tables where the stock symbol is GOOGL.
 
+The command "--remove" can be optionally replaced with "-r" with the same effect, as in `python StockTracker.py -r GOOGL` or `python StockTracker.py -r GOOGL --allTables`.
+
 ### --display
 Used to display the stock symbols that are currently being tracked.
 
 The command line example `python StockTracker.py --display` would print any symbols being tracked to the command line.
 
+The command "--display" can be optionally replaced with "-d" with the same effect, as in `python StockTracker.py -d`.
