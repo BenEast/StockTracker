@@ -4,6 +4,8 @@ This project uses a locally hosted MySQL database to monitor stock information a
 
 StockMonitor.pyw can be run as a background process to update price information every 5 minutes, when it is during trading hours and not a stock exchange holiday. All hours and holiday information are imported from the New York Stock Exchange website (https://www.nyse.com/markets/hours-calendars).
 
+The Rainmeter folder contains a custom skin to display the stock symbols being tracked, along with their most recent price. This information is stored in two .txt files, which are updated each time the program adds new entries to the StockBot database. There is also a corresponding `StockMonitor_1.0.0.rmskin` file, which allows for quick installation of the rainmeter skin. This skin is based on the "illustro" rainmeter theme, which comes with the program upon installation.
+
 Stocks can be added, removed, or displayed from the database using the following command line arguments:
 
 ### --add (stock symbol)
