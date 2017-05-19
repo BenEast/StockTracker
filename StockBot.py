@@ -34,6 +34,29 @@ class StockBot:
         # Cut off the last comma in the string
         return commaString[:len(commaString) - 2]
     
+    _stockNamesFilePath = "C:/Users/Ben/Documents/Rainmeter/Skins/illustro/Stock Monitor/StockNames.txt"
+    _stockPricesFilePath = "C:/Users/Ben/Documents/Rainmeter/Skins/illustro/Stock Monitor/StockPrices.txt"
+    
+    # Opens the stock names and stock prices files in write mode to clear all contents from them.
+    # PARAMETERS: None
+    # RETURNS: None
+    def _clearRainmeterFiles(self) -> None:
+        open(self._stockNamesFilePath, 'w').close()
+        open(self._stockPricesFilePath, 'w').close()
+            
+    # Updates the stock names and stock prices files for use with the rainmeter skin
+    # PARAMETERS: stockID: the stock symbol to be added to StockNames.txt;
+    #             currentPrice: the current price of the stock symbol to be added to StockPrices.txt;
+    # RETURNS: None
+    def _updateRainmeterFiles(self, stockID: str, currentPrice: float) -> None:
+        nameFile = open(self._stockNamesFilePath, 'a')
+        nameFile.write(stockID + "\n\n")
+        nameFile.close()
+        
+        priceFile = open(self._stockPricesFilePath, 'a')
+        priceFile.write(currentPrice + "\n\n")
+        priceFile.close()
+    
     # Import the stock_id keys from the StockBot.stock table.
     # PARAMETERS: None
     # RETURNS: None
@@ -56,15 +79,18 @@ class StockBot:
             attributes = self.sd.getAttributes(tableAttributesQuery)
             
             self.tableDict[table] = attributes
-            
+        
     # Monitors the stocks that are contained in the database.
     # PARAMETERS: None
     # RETURNS: None
     def monitor(self) -> None:
+        self._clearRainmeterFiles()
         for stockID in self.stocksToMonitor:
             try:
                 yahoo = Share(stockID)
-                self.postStockActivity(stockID, yahoo.get_price())
+                currentPrice = yahoo.get_price()
+                self.postStockActivity(stockID, currentPrice)
+                self._updateRainmeterFiles(stockID, currentPrice)
             except YQLQueryError:
                 logging.warning("Yahoo finance is currently unavailable.")
             except:
