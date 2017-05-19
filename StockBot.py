@@ -34,6 +34,7 @@ class StockBot:
         # Cut off the last comma in the string
         return commaString[:len(commaString) - 2]
     
+    # These file paths are used by a rainmeter skin to display stock/price data.
     _stockNamesFilePath = "C:/Users/Ben/Documents/Rainmeter/Skins/illustro/Stock Monitor/StockNames.txt"
     _stockPricesFilePath = "C:/Users/Ben/Documents/Rainmeter/Skins/illustro/Stock Monitor/StockPrices.txt"
     
