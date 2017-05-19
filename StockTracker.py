@@ -47,11 +47,11 @@ def main():
     
     args = parser.parse_args()
 
-    # Display all stocks
+    # Handle --display command
     if args.display: # Will be updated to show a GUI instead of printing stock signs
         for stock in sd.getKeyValues('stock'):
             print(stock)
-    # Handle /add command
+    # Handle --add command
     elif not args.add == None:
         stock = args.add.upper()
         yahoo = Share(stock)
@@ -62,7 +62,7 @@ def main():
         else:
             print("Invalid stock argument passed with --add.")
             logging.warning("Invalid stock argument passed with --add.")
-    # Handle /remove command                
+    # Handle --remove command                
     elif not args.remove == None:
         stock = args.remove.upper()
         if stock in sb.stocksToMonitor:

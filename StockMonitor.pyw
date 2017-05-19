@@ -204,9 +204,9 @@ def main():
         # If it's not the weekend AND during trading hours: monitor the stocks.
         if currentDay < 5 and isDuringTrading(currentTime) and not isHoliday(currentDate):
             dayHistoryUpdated = False
-            trackerScheduler.enter(600, 1, sb.run, ())
+            trackerScheduler.enter(30, 1, sb.run, ())
             trackerScheduler.run()
-
+ 
         # Update stock_history table at the end of trading for the day.
         elif (currentDay < 5 and isAfterTrading(currentTime) 
                 and not isHoliday(currentDate) and not dayHistoryUpdated):

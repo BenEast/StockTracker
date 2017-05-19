@@ -26,7 +26,10 @@ class StockBot:
     def _attrsToCommaDeliminatedString(self, attributes: list) -> str:
         commaString = ""
         for attribute in attributes:
-            commaString = commaString + attribute + ", "
+            if attribute == None:
+                commaString = commaString + "0, "
+            else:
+                commaString = commaString + ("{}, ".format(attribute))
         
         # Cut off the last comma in the string
         return commaString[:len(commaString) - 2]
@@ -48,15 +51,11 @@ class StockBot:
         tables = self.sd.getTableNames(tableNamesQuery)
         
         for table in tables:
-            # Get key attributes
-            keyQuery = StockQueries.getPrimaryKeyQuery(self.sd.getDatabaseName(), table)
-            keys = self.sd.getKeyAttributes(keyQuery)
-            
-            # Get non-key attributes
+            # Get attributes
             tableAttributesQuery = StockQueries.getAttributeQuery(table)
-            attributes = self.sd.getAttributes(tableAttributesQuery) #Includes keys
+            attributes = self.sd.getAttributes(tableAttributesQuery)
             
-            self.tableDict[table] = dict(zip(keys, attributes))
+            self.tableDict[table] = attributes
             
     # Monitors the stocks that are contained in the database.
     # PARAMETERS: None
@@ -77,11 +76,11 @@ class StockBot:
     def postStock(self, stockID: str) -> None:
         # Get the schema of the stock table and format it as a comma delimited
         # string for use in the MySQL query.
-        stockAttributes = self.tableDict.get("stock").values()
+        stockAttributes = self.tableDict.get("stock")
         attributesString = self._attrsToCommaDeliminatedString(stockAttributes)
         
         # Format as a comma delimted string for use in the SQL query
-        attributesToInsert = "{}, {}, {}, {}".format('"' + stockID + '"', 0, 0, 0)
+        attributesToInsert = '"{}", {}, {}, {}'.format(stockID, 0, 0, 0)
         query = StockQueries.getInsertQuery("stock", attributesString, attributesToInsert)
         self.sd.runQuery(query)
         
@@ -96,7 +95,7 @@ class StockBot:
         
         # Get the schema of the stock_activity table and format it as a comma delimited
         # string for use in the MySQL query.
-        stockActivityAttributes = self.tableDict.get("stock_activity").values()
+        stockActivityAttributes = self.tableDict.get("stock_activity")
         attributesString = self._attrsToCommaDeliminatedString(stockActivityAttributes)
         
         # Format as a comma delimted string for use in the SQL query
@@ -111,7 +110,8 @@ class StockBot:
     # RETURNS: None
     def postStockHistory(self) -> None:
         for stockID in self.stocksToMonitor:
-            currentDate = datetime.now().strftime("%Y-%m-%d %H:%M:%S")[:10]
+            timestamp = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+            currentDate = timestamp[:10]
             
             # Get the average MySQL query
             avgQuery = StockQueries.getAverageQuery("stock_activity_price", "stock_activity", 
@@ -124,13 +124,13 @@ class StockBot:
             
             # Get the schema of the stock_history table and format it as a comma delimited
             # string for use in the MySQL query.
-            stockHistoryAttributes = self.tableDict.get("stock_history").values()
+            stockHistoryAttributes = self.tableDict.get("stock_history")
             attributesString = self._attrsToCommaDeliminatedString(stockHistoryAttributes)
             
             try:
                 # Format as a comma delimted string for use in the SQL query
-                attributesToInsert = self._attrsToCommaDeliminatedString([stockID, 
-                                              currentDate, 
+                attributesToInsert = self._attrsToCommaDeliminatedString(['"'+stockID+'"', 
+                                              '"'+currentDate+'"', 
                                               yahoo.get_open(), 
                                               average, 
                                               yahoo.get_price(), 
